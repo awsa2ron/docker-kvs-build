@@ -1,7 +1,11 @@
 # Build docker with
-# docker build -t kinesis-video-producer-sdk-c-amazon-linux .
+# docker build -t docker-kvs-build .
+# docker run -it --rm docker-kvs-build
 #
 FROM amazonlinux:latest
+
+ENV USER kvs
+ENV PASSWD kvs
 
 RUN yum install -y \
 	autoconf \
@@ -28,6 +32,7 @@ RUN yum install -y \
 	pkgconfig \
 	vim \
 	wget \
+	sudo \
 	xz && \
 	wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz && \
     tar zxvf cmake-3.* && \
@@ -37,7 +42,7 @@ RUN yum install -y \
     make -j4 && \
     make install
 
-#WORKDIR /opt/
-#RUN git clone --recursive https://github.com/awslabs/amazon-kinesis-video-streams-producer-c.git
-#WORKDIR /opt/amazon-kinesis-video-streams-producer-sdk-c/build/
-#RUN cmake .. && make 
+RUN useradd -rm -d /home/${USER} -s /bin/bash -g root -G wheel -u 1000 ${USER} && \
+echo "${USER}:${PASSWD}" | chpasswd
+USER ${USER}
+WORKDIR /home/${USER}
