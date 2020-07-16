@@ -1,6 +1,6 @@
-# Using Docker images for Producer SDK (CPP and GStreamer plugin):
+# Using Docker images for Producer SDK building:
 
-Please follow the four steps below to get the Docker image for Producer SDK (includes CPP and GStreamer plugin) and start streaming to Kinesis Video.
+Please follow the four steps below to get the Docker image for Producer SDK building.
 
 #### Pre-requisite:
 
@@ -14,39 +14,37 @@ Follow instructions to download and start Docker
 #### Step 1: Build the docker image
 
 Run the following command: 
-`docker build -t kinesis-video-producer-sdk-cpp-amazon-linux .`
+`docker build -t docker-kvs-build:latest .`
 
 This takes some time as it pulls all the dependencies in.
 
-#### Step 2: Find the docker image
-Run the following command to find the image id for `kinesis-video-producer-sdk-cpp-amazon-linux`:
-`docker images`
+#### Step 2: Start the container
+Run the following command to start the kinesis video sdk building container.
 
+`sudo docker run --rm -it -v <kvs-source-code-path>:/home/kvs/sdk docker-kvs-build:latest`
 
-#### Step 3: Start the container
-Run the following command to start the kinesis video sdk container. Note that this will not work in macOS
+#### Step 3: Building the sample
+cd sdk/
+mkdir -p build
+cd build/ && rm -rf ./* && rm -rf ../open-source/*
+git pull --recurse-submodules
+cmake ..
+make
 
-`sudo docker run -it --device=/dev/video0 --device=/dev/vchiq -v /opt/vc:/opt/vc <image-id> /bin/bash`
+#### Step 4: Set these environment variables: 
 
-You can also run this with the label and latest tag instead of image ID:
-`sudo docker run -it --device=/dev/video0 --device=/dev/vchiq -v /opt/vc:/opt/vc kinesis-video-producer-sdk-cpp-amazon-linux:latest /bin/bash`
+```
+export AWS_SECRET_ACCESS_KEY=xxx
+export AWS_ACCESS_KEY_ID=xxx
+export AWS_DEFAULT_REGION=us-west-2	
+```
 
-#### Step 4: Run the gstreamer sample
+#### Step 5: Start to put media
 
-Set these environment variables: 
-`export GST_PLUGIN_PATH=/opt/amazon-kinesis-video-streams-producer-sdk-cpp/build`
-`export LD_LIBRARY_PATH=/opt/amazon-kinesis-video-streams-producer-sdk-cpp/open-source/local/lib`
+```
+# Put media to "my-kvs-stream" on KVS for 600 seconds.
+./kvsAacAudioVideoStreamingSample my-kvs-stream 600
+```
 
-Start the streaming with the `gst-launch-1.0` command:
-
-`gst-launch-1.0 v4l2src do-timestamp=TRUE device=/dev/video0 ! videoconvert ! video/x-raw,format=I420,width=640,height=480,framerate=30/1 ! omxh264enc control-rate=2 target-bitrate=512000 inline-header=FALSE periodicty-idr=20 ! h264parse ! video/x-h264,stream-format=avc,alignment=au,width=640,height=480,framerate=30/1,profile=baseline ! kvssink stream-name="YOURSTREAMNAME" access-key=YOURACCESSKEY secret-key=YOURSECRETKEY`
-
-
-Note: 
-
-On macOS, you can only stream video from a network camera when running GStreamer in a Docker container. Streaming video from a USB camera on macOS in a Docker container is not supported. Run the following 
-command to start the container:
-`sudo docker run -it --network="host" <image-id> /bin/bash` 
-	or,
-`sudo docker run -it --network="host" kinesis-video-producer-sdk-cpp-amazon-linux:latest /bin/bash`
-
+>Note:
+>KVS will create "my-kvs-stream" automatically once received video data.
