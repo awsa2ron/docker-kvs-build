@@ -42,6 +42,12 @@ RUN yum install -y \
     make -j4 && \
     make install
 
+RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz && \
+	tar xvf gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz && \
+	rm gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz && \
+	mv gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf /opt/ && \
+	export PATH=$PATH:/opt/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf/bin
+
 RUN useradd -rm -d /home/${USER} -s /bin/bash -g root -G wheel -u 1000 ${USER} && \
 echo "${USER}:${PASSWD}" | chpasswd
 USER ${USER}
