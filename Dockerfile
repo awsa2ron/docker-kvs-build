@@ -30,6 +30,7 @@ RUN yum install -y \
 	m4 \
 	mpfr-devel \
 	pkgconfig \
+	unzip \
 	vim \
 	wget \
 	sudo \
@@ -52,3 +53,8 @@ RUN useradd -rm -d /home/${USER} -s /bin/bash -g root -G wheel -u 1000 ${USER} &
 echo "${USER}:${PASSWD}" | chpasswd
 USER ${USER}
 WORKDIR /home/${USER}
+
+# install aws CLI version 
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+	unzip awscliv2.zip && \
+	./aws/install
